@@ -18,8 +18,9 @@ public class MascotaViewController {
         model.addAttribute("mascotas", mascotaService.obtenerTodasMascotas());
         return "mascotas"; // Devuelve tu plantilla mascotas.html
     }
+
     @GetMapping("/razas")
     public String verPaginaRazas() {
-        return "razas"; // Devuelve la plantilla razas.html (dentro de templates)
+        return "Razas"; // Devuelve la plantilla razas.html (dentro de templates)
     }
 }

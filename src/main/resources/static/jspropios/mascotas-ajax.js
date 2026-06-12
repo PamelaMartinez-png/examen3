@@ -1,33 +1,22 @@
-// ======= CRUD DE MASCOTAS CON RELACIÓN DINÁMICA DE RAZAS =======
-
-// Función para listar las mascotas cruzando datos con la API de Razas
-function listarMascotasDinámicas() {
-    // 1. Primero consultamos las razas para conocer sus nombres textuales
+function listarMascotasDinamicas() {
     $.ajax({
         url: '/api/razas',
         type: 'GET',
         success: function(razas) {
-            // Creamos un mapa rápido en memoria { id: nombre }
             let mapaRazas = {};
-            razas.forEach(r => { mapaRazas[c.id || r.id] = r.nombre; });
+            razas.forEach(r => { mapaRazas[r.id] = r.nombre; });
 
-            // 2. Una vez que tenemos el mapa, cargamos las mascotas
             $.ajax({
-                url: '/api/mascotas', // Ajusta si tu endpoint base de MascotaController tiene prefijo
+                url: '/',
                 type: 'GET',
                 success: function (mascotas) {
-                    // Inicializamos tu DataTable (Asegúrate de tener el id='exampleMascotas' en tu table HTML)
                     let tabla = new DataTable('#exampleMascotas');
-                    tabla.clear().draw(); // Limpieza para evitar duplicados
+                    tabla.clear().draw();
 
                     mascotas.forEach(m => {
                         let botones = `<button type="button" class="btn btn-primary btn-sm" onclick="buscarMascotaPorId(${m.id})">Editar</button>`;
                         botones += ` <button type="button" class="btn btn-danger btn-sm" onclick="eliminarMascota(${m.id})">Eliminar</button>`;
-
-                        // Buscamos el nombre de la raza en el mapa. Si no existe, ponemos "Sin Raza"
                         let nombreRazaTexto = mapaRazas[m.raza] || "Sin Raza";
-
-                        // Añadimos las celdas en el orden exacto de tus columnas HTML
                         tabla.row
                             .add([m.id, m.nombre, nombreRazaTexto, m.edad, m.observaciones, botones])
                             .draw()
@@ -39,57 +28,76 @@ function listarMascotasDinámicas() {
     });
 }
 
-// POST / PUT: Registrar o Actualizar Mascota
 function guardarMascota() {
     let id = $('#mascotaId').val();
     let nombre = $('#nom').val();
-    let razaSelect = $('#raz');
-    let idRaza = parseInt(razaSelect.value || razaSelect.val()); // Convertimos a entero para la entidad Long
+    let razaSelect = document.getElementById('raz');
+    let idRazaNumeric = parseInt(razaSelect.value);
+    let textoRazaBonito = razaSelect.options[razaSelect.selectedIndex].text;
 
-    if (nombre === "") {
-        alert("Escriba un nombre");
+    if (nombre === "" || isNaN(idRazaNumeric)) {
+        alert("Por favor, escriba un nombre y seleccione una raza válida.");
         return;
     }
 
     let payload = {
         nombre: nombre,
-        raza: idRaza, // Enviamos el ID numérico
-        edad: parseInt($('#eda').val()),
+        raza: idRazaNumeric,
+        edad: parseInt($('#eda').val() || 0),
         observaciones: $('#obs').val()
     };
 
-    let urlDestino = id ? `/api/mascotas/${id}` : '/api/mascotas';
-    let metodoHttp = id ? 'PUT' : 'POST';
+    let urlDestino = id ? `/${id}` : '/';
+    let metodoHttp = id ? 'PATCH' : 'POST'; // Tu backend usa @PatchMapping para actualizar
 
     $.ajax({
         url: urlDestino,
         type: metodoHttp,
         contentType: 'application/json',
         data: JSON.stringify(payload),
-        success: function () {
-            alert("¡Mascota procesada con éxito!");
-            $('#mascotaModal').modal('hide');
+        success: function (m) {
+            let tabla = new DataTable('#exampleMascotas');
 
-            // En lugar de reiniciar toda la página, volvemos a renderizar el DataTables de forma limpia
-            listarMascotasDinámicas();
+            let botones = `<button type="button" class="btn btn-primary btn-sm" onclick="buscarMascotaPorId(${m.id})">Editar</button>`;
+            botones += ` <button type="button" class="btn btn-danger btn-sm" onclick="eliminarMascota(${m.id})">Eliminar</button>`;
+
+            if (id) {
+                let datosFila = tabla.row("#renglon_" + m.id).data();
+                datosFila[1] = m.nombre;
+                datosFila[2] = textoRazaBonito;
+                datosFila[3] = m.edad;
+                datosFila[4] = m.observaciones;
+
+                tabla.row("#renglon_" + m.id).data(datosFila).draw();
+                alert("Mascota actualizada correctamente");
+            } else {
+
+                tabla.row
+                    .add([m.id, m.nombre, textoRazaBonito, m.edad, m.observaciones, botones])
+                    .draw()
+                    .node().id = 'renglon_' + m.id;
+                alert("Mascota registrada correctamente");
+            }
+
+            $('#mascotaModal').modal('hide');
             limpiarFormulario();
         },
-        error: function(err) {
-            console.error("Error al procesar la mascota:", err);
+        error: function(xhr) {
+            console.error("Error al guardar mascota:", xhr.responseText);
+            alert("Error en el servidor al intentar guardar.");
         }
     });
 }
 
-// GET: Obtener una mascota específica y rellenar los inputs del modal para editar
 function buscarMascotaPorId(id) {
     $.ajax({
-        url: `/api/mascotas/${id}`,
+        url: `/${id}`,
         type: 'GET',
         success: function (m) {
             $('#modalTitulo').text('Actualizar Mascota');
             $('#mascotaId').val(m.id);
             $('#nom').val(m.nombre);
-            $('#raz').val(m.raza); // Asigna el ID numérico al selector de razas
+            $('#raz').val(m.raza);
             $('#eda').val(m.edad);
             $('#obs').val(m.observaciones);
 
@@ -98,14 +106,13 @@ function buscarMascotaPorId(id) {
     });
 }
 
-// DELETE: Eliminar con confirmación
 function eliminarMascota(id) {
-    if (confirm("¿Estás seguro de que deseas eliminar esta mascota?")) {
+    if (confirm("¿Está seguro de que desea eliminar esta mascota?")) {
         $.ajax({
-            url: `/api/mascotas/${id}`,
+            url: `/${id}`,
             type: 'DELETE',
             success: function () {
-                alert("Mascota eliminada");
+                alert("Mascota eliminada correctamente");
                 let tabla = new DataTable('#exampleMascotas');
                 tabla.row('#renglon_' + id).remove().draw();
             }
@@ -113,7 +120,6 @@ function eliminarMascota(id) {
     }
 }
 
-// Cargar dinámicamente el selector `<select id="raz">` del modal de mascotas
 function cargarSelectRazas() {
     $.ajax({
         url: '/api/razas',
