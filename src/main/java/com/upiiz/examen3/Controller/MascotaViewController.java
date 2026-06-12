@@ -1,6 +1,7 @@
 package com.upiiz.examen3.Controller;
 
 import com.upiiz.examen3.Services.MascotaService;
+import com.upiiz.examen3.Services.RazaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,15 +13,19 @@ public class MascotaViewController {
     @Autowired
     private MascotaService mascotaService;
 
+    @Autowired
+    private RazaService razaService;
+
     @GetMapping("/mascotas")
     public String verPaginaMascotas(Model model) {
-        // Almacenamos la lista en el modelo para pasársela a Thymeleaf
         model.addAttribute("mascotas", mascotaService.obtenerTodasMascotas());
-        return "mascotas"; // Devuelve tu plantilla mascotas.html
+        return "mascotas";
     }
 
     @GetMapping("/razas")
-    public String verPaginaRazas() {
-        return "Razas"; // Devuelve la plantilla razas.html (dentro de templates)
+    public String verPaginaRazas(Model model) {
+        // Ahora sí pasa la lista al modelo para que Thymeleaf pueda pintarla
+        model.addAttribute("razas", razaService.listadoRazas());
+        return "Razas";
     }
 }

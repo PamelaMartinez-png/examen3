@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Controller
+@RequestMapping("/api/mascotas")
 public class MascotaController {
 
     @Autowired
@@ -19,32 +20,31 @@ public class MascotaController {
 //        return "mascotas";
 //    }
     @GetMapping
-    @ResponseBody
     public ResponseEntity<List<MascotaEntity>> getMascotas() {
         return ResponseEntity.ok(mascotaService.obtenerTodasMascotas());
     }
 
     @GetMapping("/{id}")
-    @ResponseBody
+//    @ResponseBody
     public ResponseEntity<MascotaEntity> getMascotaById(@PathVariable Long id) {
         return ResponseEntity.ok(mascotaService.obtenerMascotaPorId(id));
     }
 
     @PostMapping
-    @ResponseBody
+//    @ResponseBody
     public ResponseEntity<MascotaEntity> addMascota(@RequestBody MascotaEntity mascota) {
         return ResponseEntity.ok(mascotaService.guardarMascota(mascota));
     }
 
     @PatchMapping("/{id}")
-    @ResponseBody
+//    @ResponseBody
     public ResponseEntity<MascotaEntity> updateMascota(@PathVariable Long id, @RequestBody MascotaEntity mascota) {
         mascota.setId(id);
         return ResponseEntity.ok(mascotaService.actualizarMascota(mascota));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseBody
+//    @ResponseBody
     public void deleteMascota(@PathVariable Long id) {
         mascotaService.eliminarMascota(id);
     }

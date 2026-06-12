@@ -7,10 +7,10 @@ function listarMascotasDinamicas() {
             razas.forEach(r => { mapaRazas[r.id] = r.nombre; });
 
             $.ajax({
-                url: '/',
+                url: '/api/mascotas',
                 type: 'GET',
                 success: function (mascotas) {
-                    let tabla = new DataTable('#exampleMascotas');
+                    let tabla = $('#exampleMascotas').DataTable();
                     tabla.clear().draw();
 
                     mascotas.forEach(m => {
@@ -47,8 +47,8 @@ function guardarMascota() {
         observaciones: $('#obs').val()
     };
 
-    let urlDestino = id ? `/${id}` : '/';
-    let metodoHttp = id ? 'PATCH' : 'POST'; // Tu backend usa @PatchMapping para actualizar
+    let urlDestino = id ? `/api/mascotas/${id}` : '/api/mascotas';
+    let metodoHttp = id ? 'PATCH' : 'POST';
 
     $.ajax({
         url: urlDestino,
@@ -56,7 +56,7 @@ function guardarMascota() {
         contentType: 'application/json',
         data: JSON.stringify(payload),
         success: function (m) {
-            let tabla = new DataTable('#exampleMascotas');
+            let tabla = $('#exampleMascotas').DataTable();
 
             let botones = `<button type="button" class="btn btn-primary btn-sm" onclick="buscarMascotaPorId(${m.id})">Editar</button>`;
             botones += ` <button type="button" class="btn btn-danger btn-sm" onclick="eliminarMascota(${m.id})">Eliminar</button>`;
@@ -67,11 +67,9 @@ function guardarMascota() {
                 datosFila[2] = textoRazaBonito;
                 datosFila[3] = m.edad;
                 datosFila[4] = m.observaciones;
-
                 tabla.row("#renglon_" + m.id).data(datosFila).draw();
                 alert("Mascota actualizada correctamente");
             } else {
-
                 tabla.row
                     .add([m.id, m.nombre, textoRazaBonito, m.edad, m.observaciones, botones])
                     .draw()
@@ -91,7 +89,7 @@ function guardarMascota() {
 
 function buscarMascotaPorId(id) {
     $.ajax({
-        url: `/${id}`,
+        url: `/api/mascotas/${id}`,
         type: 'GET',
         success: function (m) {
             $('#modalTitulo').text('Actualizar Mascota');
@@ -100,7 +98,6 @@ function buscarMascotaPorId(id) {
             $('#raz').val(m.raza);
             $('#eda').val(m.edad);
             $('#obs').val(m.observaciones);
-
             $('#mascotaModal').modal('show');
         }
     });
@@ -109,11 +106,11 @@ function buscarMascotaPorId(id) {
 function eliminarMascota(id) {
     if (confirm("¿Está seguro de que desea eliminar esta mascota?")) {
         $.ajax({
-            url: `/${id}`,
+            url: `/api/mascotas/${id}`,
             type: 'DELETE',
             success: function () {
                 alert("Mascota eliminada correctamente");
-                let tabla = new DataTable('#exampleMascotas');
+                let tabla = $('#exampleMascotas').DataTable();
                 tabla.row('#renglon_' + id).remove().draw();
             }
         });

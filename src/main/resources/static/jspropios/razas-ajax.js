@@ -14,7 +14,6 @@ function guardarRaza() {
         data: JSON.stringify({ nombre: nombre }),
         success: function () {
             alert('Raza registrada correctamente');
-            location.reload(); // Recarga simple para pintar el cambio
         }
     });
 }
